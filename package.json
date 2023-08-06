@@ -19,16 +19,22 @@
     "e2e": "playwright test"
   },
   "dependencies": {
+    "@rsuite/icons": "^1.0.3",
+    "electron-store": "^8.1.0",
     "electron-updater": "^5.3.0",
     "kafkajs": "^2.2.4",
+    "nanoid": "^4.0.2",
+    "pubsub-js": "^1.9.4",
+    "react-icons": "^4.10.1",
     "rsuite": "^5.37.3"
   },
   "devDependencies": {
     "@playwright/test": "^1.32.0",
+    "@types/pubsub-js": "^1.8.3",
     "@types/react": "^18.0.28",
     "@types/react-dom": "^18.0.11",
     "@vitejs/plugin-react": "^3.1.0",
-    "electron": "^23.2.0",
+    "electron": "^23.3.12",
     "electron-builder": "^23.6.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
