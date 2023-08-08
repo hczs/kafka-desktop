@@ -28,7 +28,7 @@ const RightContent = () => {
             case "clusterInfo":
                 return <ClusterInfo kafkaClient={kafkaClient}></ClusterInfo>;
             case "topics":
-                return <Topics></Topics>;
+                return <Topics kafkaClient={kafkaClient}></Topics>;
         }
     }
 
@@ -46,7 +46,7 @@ const RightContent = () => {
             }
         });
         const testAdmin = tmpClient.admin();
-        testAdmin.connect().then(res => {
+        testAdmin.connect().then(() => {
             toaster.push(<Message showIcon type="success">连接成功！</Message>, {
                 duration: 2000
             });

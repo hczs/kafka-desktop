@@ -36,7 +36,7 @@ const ClusterInfo = (props: Props) => {
     }, [props.kafkaClient])
 
     return (
-        <div>
+        <div className="right-panel">
             <div>
                 <h5>集群ID：{clusterId}</h5>
                 <br/>
