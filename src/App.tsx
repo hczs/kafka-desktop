@@ -4,16 +4,26 @@ import "./index.scss"
 import Side from "@/components/side/side";
 import PageContext from "@/PageContext";
 import RightContent from "@/components/rightContent/RightContent";
+import {ipcRenderer} from "electron";
 
 interface State {
     theme: 'light' | 'dark' | 'high-contrast',
 }
 
+const getTheme = () => {
+    const storeTheme = ipcRenderer.sendSync("getData", "theme");
+    if (storeTheme) {
+        return storeTheme;
+    }
+    return "light";
+}
+
 const App = () => {
 
-    const [state, setState] = useState<State>({theme: "dark"});
+    const [state, setState] = useState<State>({theme: getTheme()});
 
     const changeTheme = (theme: 'light' | 'dark' | 'high-contrast') => {
+        ipcRenderer.send("saveData", "theme", theme);
         setState({theme: theme});
     }
 
