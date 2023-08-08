@@ -1,7 +1,7 @@
 import React, {useEffect, useState} from 'react';
 import PubSub from "pubsub-js"
 import {Admin, Kafka} from "kafkajs";
-import {Table} from "rsuite";
+import {Loader, Table} from "rsuite";
 
 const {Column, HeaderCell, Cell} = Table;
 
@@ -17,15 +17,24 @@ const ClusterInfo = (props: Props) => {
 
     const [clusterId, setClusterId] = useState<string>();
 
+    const [tableLoading, setTableLoading] = useState(false);
+
     useEffect(() => {
         console.log("ClusterInfo component mount");
+        if (!props.kafkaClient) {
+            return;
+        }
         setKafkaAdmin(() => {
+            setTableLoading(true);
             const admin = props.kafkaClient?.admin();
             admin?.connect();
             admin?.describeCluster().then(res => {
                 setClusterId(res.clusterId);
                 setBrokers(res.brokers);
+            }).finally(() => {
+                setTableLoading(false);
             })
+            console.log("loading end");
             return admin;
         });
         return () => {
@@ -43,8 +52,7 @@ const ClusterInfo = (props: Props) => {
                 <Table
                     autoHeight={true}
                     data={brokers}
-                    bordered={true}
-                    cellBordered
+                    loading={tableLoading}
                 >
                     <Column flexGrow={1} align={"center"}>
                         <HeaderCell>节点ID</HeaderCell>
