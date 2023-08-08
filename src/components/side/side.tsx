@@ -39,12 +39,14 @@ const Side = () => {
     // 确认删除框控制
     const [delModalOpen, setDelModalOpen] = useState(false);
 
-    // kafka连接表单字段
-    const [formValue, setFormValue] = useState<any>({
+    const defaultFormValue = {
         id: '',
         clusterName: '',
         brokers: ''
-    });
+    }
+
+    // kafka连接表单字段
+    const [formValue, setFormValue] = useState<any>(defaultFormValue);
 
     // 表单校验
     const model = Schema.Model({
@@ -72,7 +74,8 @@ const Side = () => {
 
 
     const changeTheme = () => {
-        context.changeTheme(context.theme == "light" ? "dark" : "light");
+        const targetTheme = context.theme == "light" ? "dark" : "light";
+        context.changeTheme(targetTheme);
     };
 
     const connect = (rowData: RowDataType<never>) => {
@@ -84,7 +87,7 @@ const Side = () => {
 
     // 关闭模态框
     const handleClose = () => {
-        setFormValue({});
+        setFormValue(defaultFormValue);
         setOpen(false);
     };
 
