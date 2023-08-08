@@ -1,6 +1,16 @@
 import React, {useEffect, useState} from 'react';
-import {Admin, ITopicConfig, Kafka, PartitionMetadata} from "kafkajs";
-import {Button, Form, InputNumber, Message, Modal, Panel, Popover, Schema, Table, toaster, Whisper} from "rsuite";
+import {Admin, Kafka, PartitionMetadata} from "kafkajs";
+import {
+    Button,
+    Form,
+    InputNumber,
+    Message,
+    Modal,
+    Schema,
+    Table,
+    Tag,
+    toaster,
+} from "rsuite";
 import {RowDataType} from 'rsuite/esm/Table';
 import to from "await-to-js";
 import "./topics.scss";
@@ -18,22 +28,23 @@ interface Props {
 interface TopicTableData {
     topicName: string,
     partitionCount: number,
-    partitionInfo: PartitionMetadata[]
+    partitionInfo: PartitionInfo[]
 }
 
-// 分区设计待定
-// interface PartitionInfo {
-//     // brokerInfo eg: 192.168.31.155:9092
-//     // brokerInfo[id=id] eg: 192.168.31.155:9092[id=0]
-//     partition: string,
-//     // brokerInfo[id=id] eg: 192.168.31.155:9092[id=0]
-//     leader: string,
-//     // 副本集合
-//     replicas: number,
-//     // isr
-//     isr:
-//
-// }
+interface PartitionInfo {
+    // 分区ID
+    partitionId: number,
+    // brokerInfo[brokerId=id] eg: 192.168.31.155:9092[brokerId=0]
+    leader: string,
+    // 副本broker
+    replicas: number[],
+    // isr broker
+    isr: number[],
+    // admin.fetchTopicOffsets(topic) 获取
+    offset?: number,
+    high?: number,
+    low?: number,
+}
 
 interface SearchForm {
     topicName: string
@@ -75,6 +86,7 @@ const Topics = (props: Props) => {
 
     const [addTopicBtnLoading, setAddTopicBtnLoading] = useState(false);
 
+    const [partitionModalLoading, setPartitionModalLoading] = useState(false);
     // 表单校验
     const model = Schema.Model({
         topic: Schema.Types.StringType().isRequired('请输入Topic名称'),
@@ -115,18 +127,34 @@ const Topics = (props: Props) => {
         return admin;
     }
 
+    const convertToPartitionInfo = (partitions: PartitionMetadata[], brokerMap: Map<number, string>) => {
+        const resArray: Array<PartitionInfo> = [];
+        partitions.forEach(item => {
+            resArray.push({
+                partitionId: item.partitionId,
+                leader: brokerMap.get(item.leader) + "[brokerId=" + item.leader + "]",
+                replicas: item.replicas,
+                isr: item.isr,
+            })
+        })
+        return resArray;
+    }
+
     const fetchTableData = async (admin: Admin | undefined) => {
         const dataList: Array<TopicTableData> = [];
         if (!admin) {
             return dataList;
         }
+        const clusterInfo = await admin.describeCluster();
+        const brokerMap = new Map(clusterInfo.brokers
+            .map(item => [item.nodeId, item.host + ":" + item.port]))
         const topicMetaDataList = await admin.fetchTopicMetadata();
         console.log("topicMetaDataList: ", topicMetaDataList);
         topicMetaDataList.topics.forEach(item => {
             dataList.push({
                 topicName: item.name,
                 partitionCount: item.partitions.length,
-                partitionInfo: item.partitions,
+                partitionInfo: convertToPartitionInfo(item.partitions, brokerMap),
             });
         });
         return dataList;
@@ -141,8 +169,21 @@ const Topics = (props: Props) => {
     }
 
     const openPartitionModal = (rowData: RowDataType<never>) => {
-        setPartitionInfoList(rowData.partitionInfo);
         setPartitionModalOpen(true);
+        setPartitionModalLoading(true);
+        // 获取offset数据
+        kafkaAdmin?.fetchTopicOffsets(rowData.topicName).then(res => {
+            const partitionInfoMap = new Map(res.map(item => [item.partition, item]));
+            rowData.partitionInfo.forEach((item: any) => {
+                const pInfo = partitionInfoMap.get(item.partitionId);
+                item.offset = pInfo?.offset;
+                item.high = pInfo?.high;
+                item.low = pInfo?.low;
+            })
+            setPartitionInfoList(rowData.partitionInfo);
+        }).finally(() => {
+            setPartitionModalLoading(false);
+        });
     }
 
     const searchTopic = async () => {
@@ -181,10 +222,6 @@ const Topics = (props: Props) => {
         });
     }
 
-    const handleAddTopicModalClose = () => {
-      setAddTopicModalOpen(false);
-    }
-
     const handleAddTopicSubmit = async () => {
         setAddTopicBtnLoading(true);
         if (!formRef.current?.check()) {
@@ -204,13 +241,13 @@ const Topics = (props: Props) => {
                     duration: 2000
                 });
                 fetchTopicsTableData(kafkaAdmin);
-                setAddTopicModalOpen(false);
+                handleAddTopicClose();
             } else {
                 toaster.push(<Message showIcon type="error">添加失败，请检查Topic是否重复</Message>, {
                     duration: 2000
                 });
             }
-        }).catch(err => {
+        }).catch(() => {
             toaster.push(<Message showIcon type="error">添加失败，请检查参数设置是否合理</Message>, {
                 duration: 2000
             });
@@ -234,20 +271,18 @@ const Topics = (props: Props) => {
     return (
         <div className="right-panel">
             {/* 搜索表单 */}
-            <Panel bordered bodyFill={true}>
-                <Form className={"search-form"} layout={"inline"} formValue={searchFormValue} onChange={setSearchFormValue}>
-                    <Form.Group controlId="topicName">
-                        <Form.ControlLabel>topic</Form.ControlLabel>
-                        <Form.Control name="topicName" style={{width: 260}}/>
-                    </Form.Group>
-                    <div style={{float: "right"}}>
-                        <Button appearance={"primary"} onClick={searchTopic}>查询</Button>
-                        <Button style={{marginLeft: "8px"}} onClick={resetTopicTable}>重置</Button>
-                    </div>
-                </Form>
-            </Panel>
-
-            <Button style={{margin: "5px 0 5px 0"}} onClick={openAddTopicModal}>新建</Button>
+            <Form className={"search-form"} layout={"inline"} formValue={searchFormValue} onChange={setSearchFormValue}>
+                <Form.Group controlId="topicName">
+                    <Form.ControlLabel>topic</Form.ControlLabel>
+                    <Form.Control name="topicName" style={{width: 260}}/>
+                </Form.Group>
+                <div style={{float: "right"}}>
+                    <Button appearance={"primary"} onClick={searchTopic}>查询</Button>
+                    <Button style={{marginLeft: "8px"}} onClick={resetTopicTable}>重置</Button>
+                </div>
+            </Form>
+            <hr/>
+            <Button style={{margin: "0 0 15px 0"}} onClick={openAddTopicModal}>新建</Button>
             <br/>
             {/* topic main table */}
             <Table
@@ -270,10 +305,12 @@ const Topics = (props: Props) => {
                     <Cell style={{padding: '6px'}}>
                         {rowData => (
                             <div>
-                                <Button startIcon={<InfoOutlineIcon />} appearance="subtle" onClick={() => openPartitionModal(rowData)}>
+                                <Button startIcon={<InfoOutlineIcon/>} appearance="subtle"
+                                        onClick={() => openPartitionModal(rowData)}>
                                     分区详情
                                 </Button>
-                                <Button startIcon={<TrashIcon />} appearance="subtle" onClick={() => openDelModal(rowData.topicName)}>
+                                <Button startIcon={<TrashIcon/>} appearance="subtle"
+                                        onClick={() => openDelModal(rowData.topicName)}>
                                     删除
                                 </Button>
                             </div>
@@ -283,28 +320,63 @@ const Topics = (props: Props) => {
                 </Column>
             </Table>
 
-            {/* 分区详情（设计待定） */}
-            <Modal open={partitionModalOpen} onClose={() => setPartitionModalOpen(false)}>
+            {/* 分区详情 */}
+            <Modal size={"lg"}
+                   open={partitionModalOpen}
+                   onClose={() => setPartitionModalOpen(false)}
+            >
                 <Modal.Header>
                     <Modal.Title>分区详情</Modal.Title>
                 </Modal.Header>
                 <Modal.Body>
-                    <Table height={300} data={partitionInfoList}>
-                        <Column flexGrow={1}>
+                    <Table height={325} data={partitionInfoList} loading={partitionModalLoading}>
+                        <Column align={"center"} fullText width={111}>
                             <HeaderCell>分区ID</HeaderCell>
                             <Cell dataKey="partitionId"></Cell>
                         </Column>
-                        <Column flexGrow={1}>
-                            <HeaderCell>leader</HeaderCell>
+                        <Column width={250} align={"center"} fullText>
+                            <HeaderCell>Leader节点</HeaderCell>
                             <Cell dataKey="leader"></Cell>
                         </Column>
-                        <Column flexGrow={1}>
-                            <HeaderCell>副本数</HeaderCell>
-                            <Cell dataKey="replicas"></Cell>
+                        <Column align={"center"} fullText width={111}>
+                            <HeaderCell>副本节点</HeaderCell>
+                            <Cell dataKey="replicas">
+                                {
+                                    rowData => (
+                                        <div>
+                                            {rowData.replicas.map((item: any) => {
+                                                return <Tag color="violet">{item}</Tag>;
+                                            })}
+                                        </div>
+                                    )
+                                }
+                            </Cell>
                         </Column>
-                        <Column flexGrow={1}>
-                            <HeaderCell>isr</HeaderCell>
-                            <Cell dataKey="isr"></Cell>
+                        <Column align={"center"} fullText width={111}>
+                            <HeaderCell>ISR节点</HeaderCell>
+                            <Cell dataKey="isr">
+                                {
+                                    rowData => (
+                                        <div>
+                                            {rowData.isr.map((item: any) => {
+                                                return <Tag color="violet">{item}</Tag>;
+                                            })}
+                                        </div>
+                                    )
+                                }
+                            </Cell>
+                        </Column>
+                        <Column align={"center"} fullText width={111}>
+                            <HeaderCell>Offset</HeaderCell>
+                            <Cell dataKey="offset"></Cell>
+                        </Column>
+                        <Column align={"center"} fullText width={111}>
+                            <HeaderCell>High</HeaderCell>
+                            <Cell dataKey="high"></Cell>
+                        </Column>
+                        <Column align={"center"} fullText width={123}>
+                            <HeaderCell>Low</HeaderCell>
+                            <Cell dataKey="low"></Cell>
                         </Column>
                     </Table>
                 </Modal.Body>
@@ -331,7 +403,7 @@ const Topics = (props: Props) => {
             </Modal>
 
             {/* 新建topic表单 */}
-            <Modal open={addTopicModalOpen} onClose={handleAddTopicModalClose} size="xs" backdrop={"static"}>
+            <Modal open={addTopicModalOpen} onClose={handleAddTopicClose} size="xs" backdrop={"static"}>
                 <Modal.Header>
                     <Modal.Title>新增Topic</Modal.Title>
                 </Modal.Header>
