@@ -20,6 +20,7 @@
   },
   "dependencies": {
     "@rsuite/icons": "^1.0.3",
+    "await-to-js": "^3.0.0",
     "electron-store": "^8.1.0",
     "electron-updater": "^5.3.0",
     "kafkajs": "^2.2.4",
