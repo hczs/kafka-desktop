@@ -343,7 +343,7 @@ const Topics = (props: Props) => {
                             <Cell dataKey="replicas">
                                 {
                                     rowData => (
-                                        <div>
+                                        <div key={rowData.partitionId}>
                                             {rowData.replicas.map((item: any) => {
                                                 return <Tag color="violet">{item}</Tag>;
                                             })}
@@ -357,7 +357,7 @@ const Topics = (props: Props) => {
                             <Cell dataKey="isr">
                                 {
                                     rowData => (
-                                        <div>
+                                        <div key={rowData.partitionId}>
                                             {rowData.isr.map((item: any) => {
                                                 return <Tag color="violet">{item}</Tag>;
                                             })}
