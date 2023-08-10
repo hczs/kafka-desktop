@@ -1,9 +1,6 @@
-import React, { SyntheticEvent, useEffect, useState} from 'react';
-import {Consumer, ITopicMetadata, Kafka} from "kafkajs";
-import {Button, Form, InputNumber, InputPicker, Message, toaster} from "rsuite";
-import to from "await-to-js";
-import topics from "@/components/rightContent/topics/Topics";
-import {ItemDataType} from "rsuite/cjs/@types/common";
+import React, {useEffect, useState} from 'react';
+import {Consumer, Kafka} from "kafkajs";
+import {Button, Form, InputNumber, InputPicker, Message, toaster, Toggle} from "rsuite";
 
 
 interface Props {
@@ -14,7 +11,13 @@ const MessagePoll = (props: Props) => {
 
     const [msgConsumer, setMsgConsumer] = useState<Consumer>();
 
-    const [searchFormValue, setSearchFormValue] = useState<any>();
+    const defaultSearchForm = {
+        partitionId: -1,
+        fromBeginning: true,
+        consumeType: 1,
+    }
+
+    const [searchFormValue, setSearchFormValue] = useState<any>(defaultSearchForm);
 
     const [topicPartitionMap, setTopicPartitionMap] = useState<Map<string, Array<{
         label: string,
@@ -30,6 +33,21 @@ const MessagePoll = (props: Props) => {
         label: string,
         value: number
     }>>([]);
+
+    const [consuming, setConsuming] = useState(false);
+
+    const [stopping, setStopping] = useState(false);
+
+    const consumeTypeSelectData = [
+        {
+            label: "实时消费",
+            value: 1
+        },
+        {
+            label: "单次消费",
+            value: 2
+        },
+    ]
 
     useEffect(() => {
         console.log("MessagePoll mount");
@@ -70,11 +88,11 @@ const MessagePoll = (props: Props) => {
                 // key：topicName value: partitionList
                 const topicPartitionMapRes = new Map(
                     res.topics.map(item =>
-                    [item.name, item.partitions.map(ptInfo =>
-                        ({label: ptInfo.partitionId.toString(), value: ptInfo.partitionId}))
-                    ]));
+                        [item.name, item.partitions.map(ptInfo =>
+                            ({label: ptInfo.partitionId.toString(), value: ptInfo.partitionId}))
+                        ]));
                 topicPartitionMapRes.forEach((v, _) => {
-                    v.push({label: "全部", value: -1});
+                    v.unshift({label: "全部", value: -1});
                 })
                 const topicSelectData = res.topics.map(item => ({
                     label: item.name,
@@ -94,36 +112,35 @@ const MessagePoll = (props: Props) => {
         return partition && partition === -1;
     }
 
-    const startConsume = (topic: string, partition?: number, startOffset?: string, maxCount?: number) => {
+    const startConsume = (topic: string, partition: number, startOffset?: string, maxCount?: number) => {
         let count = maxCount;
         if (msgConsumer) {
-            msgConsumer.subscribe({topic: topic, fromBeginning: true}).then(() => {
+            msgConsumer.subscribe({topic: topic, fromBeginning: searchFormValue.fromBeginning}).then(() => {
                 msgConsumer.run({
                     autoCommit: false,
                     eachMessage: async (payload) => {
                         const msg = payload.message;
+                        // console.log("===消费到消息：", msg, " 分区：", payload.partition);
                         let countFlag = false;
                         // 不是全部分区 则过滤指定分区的数据
                         if (!allPartition(partition) && payload.partition === partition) {
-                            console.log("消费到消息：", msg, " 分区：", payload.partition);
+                            console.log("[指定分区消费]消费到消息：", msg, " 分区：", payload.partition);
                             countFlag = true;
                         } else if (allPartition(partition)) {
-                            console.log("消费到消息：", msg, " 分区：", payload.partition);
+                            console.log("[消费全部分区]消费到消息：", msg, " 分区：", payload.partition);
                             countFlag = true;
                         }
                         if (countFlag && count && --count == 0) {
-                            msgConsumer.stop().then(() => {
-                                console.log("消费到达maxCount，已停止");
-                            });
+                            stop();
                         }
                     }
                 }).then(() => {
                     console.log("消费者已启动");
                 });
-                if (partition) {
+                if (partition && partition !== -1 && startOffset) {
                     msgConsumer.seek({
                         topic: topic, partition: partition,
-                        offset: startOffset === undefined ? "0" : startOffset
+                        offset: startOffset
                     });
                 }
             })
@@ -143,14 +160,38 @@ const MessagePoll = (props: Props) => {
     }
 
     const stop = () => {
+        setStopping(true);
         msgConsumer?.stop().then(() => {
             console.log("已停止消费");
+            setConsuming(false);
+            setStopping(false);
         })
     }
 
     const topicSelect = (value: string) => {
         const ptList = topicPartitionMap?.get(value);
         setPartitionSelectData(ptList === undefined ? [] : ptList);
+        setSearchFormValue((oldForm: any) => {
+            oldForm.partitionId = -1
+            return oldForm;
+        });
+        console.log(searchFormValue);
+    }
+
+    const consumeSubmit = () => {
+        console.log("searchFormValue: ", searchFormValue);
+        setConsuming(true);
+        if (searchFormValue.consumeType === 1) {
+            // 实时消费
+            startConsume(searchFormValue.topicName, searchFormValue.partitionId);
+        } else {
+            // 单次消费
+            startConsume(searchFormValue.topicName, searchFormValue.partitionId, searchFormValue.offset, searchFormValue.maxCount);
+        }
+    }
+
+    const resetSearchForm = () => {
+        setSearchFormValue(defaultSearchForm);
     }
 
     return (
@@ -171,8 +212,6 @@ const MessagePoll = (props: Props) => {
                         accepter={InputPicker}
                         onClean={() => setPartitionSelectData([])}
                         onChange={topicSelect}
-                        defaultValue={-1}
-                        width={230}
                     />
                 </Form.Group>
 
@@ -182,20 +221,48 @@ const MessagePoll = (props: Props) => {
                         name="partitionId"
                         data={partitionSelectData}
                         accepter={InputPicker}
-                        width={230}
                     />
                 </Form.Group>
 
-                <Form.Group controlId="offset">
-                    <Form.ControlLabel>offset</Form.ControlLabel>
-                    <Form.Control width={230} name="offset" accepter={InputNumber} />
+                <Form.Group controlId="fromBeginning">
+                    <Form.ControlLabel>fromBeginning</Form.ControlLabel>
+                    <Form.Control name="fromBeginning" accepter={Toggle} checked={searchFormValue.fromBeginning}/>
+                    <Form.HelpText
+                        tooltip>开启则代表从topic最早的位点开始消费，不开启则会从最近的位点开始消费</Form.HelpText>
                 </Form.Group>
 
+                {
+                    searchFormValue.partitionId != -1 && !searchFormValue.fromBeginning &&
+                    <Form.Group controlId="offset">
+                        <Form.ControlLabel>offset</Form.ControlLabel>
+                        <Form.Control name="offset" accepter={InputNumber} />
+                        <Form.HelpText
+                            tooltip>设置在该分区消费的起始offset，不设置则默认从最新的offset开始消费</Form.HelpText>
+                    </Form.Group>
+                }
+
+                <Form.Group controlId="consumeType">
+                    <Form.ControlLabel>消费类型</Form.ControlLabel>
+                    <Form.Control name="consumeType" accepter={InputPicker} data={consumeTypeSelectData} />
+                    <Form.HelpText
+                        tooltip>实时消费持续拉取消息，单次消费拉取指定数量后消费者自动停止</Form.HelpText>
+                </Form.Group>
+
+                {
+                    searchFormValue.consumeType == 2 &&
+                    <Form.Group controlId="maxCount">
+                        <Form.ControlLabel>消息数量限制</Form.ControlLabel>
+                        <Form.Control name="maxCount" accepter={InputNumber} />
+                        <Form.HelpText
+                            tooltip>单次消费达到该数量限制后，消费者将自动停止，不填写则默认 20 条上限</Form.HelpText>
+                    </Form.Group>
+                }
 
 
                 <div style={{float: "right"}}>
-                    {/*<Button appearance={"primary"} onClick={searchTopic}>查询</Button>*/}
-                    {/*<Button style={{marginLeft: "8px"}} onClick={resetTopicTable}>重置</Button>*/}
+                    <Button appearance={"primary"} onClick={consumeSubmit} loading={consuming}>拉取</Button>
+                    <Button style={{marginLeft: "8px"}} onClick={stop} loading={stopping}>停止</Button>
+                    <Button style={{marginLeft: "8px"}} onClick={resetSearchForm}>重置</Button>
                 </div>
             </Form>
             <hr/>
