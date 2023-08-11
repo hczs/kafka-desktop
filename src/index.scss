@@ -43,3 +43,15 @@
   bottom: 0;
   margin: auto;
 }
+
+
+// 全局滚动条
+*::-webkit-scrollbar{
+  width: 10px;
+}
+
+*::-webkit-scrollbar-thumb {
+  background: #ccc; // 滑块颜色
+  border-radius: 5px; // 滑块圆角
+}
+
