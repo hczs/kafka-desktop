@@ -1,0 +1,38 @@
+.message-poll-container {
+  height: 78vh;
+
+  .msg-search-form {
+    //margin: 10px 10px 0 10px;
+    display: flex;
+    flex-wrap: wrap;
+  }
+
+  .form-row {
+    margin: 20px 0 0 0;
+  }
+
+  .input-width {
+    width: 100%;
+  }
+
+  .label-width {
+    width: 100%;
+    text-align: left;
+  }
+
+  .group-width {
+    width: calc(33.33% - 8px); /* 一行三个等宽，减去间距 */
+    margin-right: 8px; /* 设置组之间的间距 */
+  }
+
+  @media (min-width: 768px) {
+    .search-form .col-md-8 {
+      flex: 0 0 33.33%;
+      max-width: 33.33%;
+    }
+  }
+
+  .form-buttons {
+    margin-left: auto;
+  }
+}

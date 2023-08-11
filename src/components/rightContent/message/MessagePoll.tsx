@@ -1,6 +1,7 @@
 import React, {useEffect, useState} from 'react';
 import {Consumer, Kafka} from "kafkajs";
-import {Button, Form, InputNumber, InputPicker, Message, toaster, Toggle} from "rsuite";
+import {Button, Col, Form, Grid, InputNumber, InputPicker, Message, Row, Stack, toaster, Toggle} from "rsuite";
+import "./MessagePoll.scss";
 
 
 interface Props {
@@ -195,7 +196,7 @@ const MessagePoll = (props: Props) => {
     }
 
     return (
-        <div className="right-panel">
+        <div className="message-poll-container">
             {/*<Button onClick={() => {*/}
             {/*    startConsume("test_2_3", 0, "0",20);*/}
             {/*}}>点我开始消费！！！</Button>*/}
@@ -203,10 +204,17 @@ const MessagePoll = (props: Props) => {
             {/*<Button onClick={resume}>继续</Button>*/}
             {/*<Button onClick={seek}>seek</Button>*/}
             {/*<Button onClick={stop}>stop</Button>*/}
-            <Form className={"search-form"} layout={"inline"} formValue={searchFormValue} onChange={setSearchFormValue}>
-                <Form.Group controlId="topicName">
-                    <Form.ControlLabel>topic</Form.ControlLabel>
+            <Form
+                className={"msg-search-form"}
+                layout={"inline"}
+                formValue={searchFormValue}
+                onChange={setSearchFormValue}
+                disabled={consuming}
+            >
+                <Form.Group controlId="topicName" className={"group-width"}>
+                    <Form.ControlLabel className={"label-width"}>Topic</Form.ControlLabel>
                     <Form.Control
+                        className={"input-width"}
                         name="topicName"
                         data={topicSelectData}
                         accepter={InputPicker}
@@ -214,52 +222,60 @@ const MessagePoll = (props: Props) => {
                         onChange={topicSelect}
                     />
                 </Form.Group>
-
-                <Form.Group controlId="partitionId">
-                    <Form.ControlLabel>分区</Form.ControlLabel>
+                <Form.Group controlId="partitionId" className={"group-width"}>
+                    <Form.ControlLabel className={"label-width"}>分区</Form.ControlLabel>
                     <Form.Control
+                        className={"input-width"}
                         name="partitionId"
                         data={partitionSelectData}
                         accepter={InputPicker}
                     />
                 </Form.Group>
-
-                <Form.Group controlId="fromBeginning">
-                    <Form.ControlLabel>fromBeginning</Form.ControlLabel>
-                    <Form.Control name="fromBeginning" accepter={Toggle} checked={searchFormValue.fromBeginning}/>
+                <Form.Group controlId="fromBeginning" className={"group-width"}>
+                    <Form.ControlLabel className={"label-width"}>FromBeginning</Form.ControlLabel>
+                    <Form.Control
+                        className={"input-width"}
+                        name="fromBeginning"
+                        accepter={Toggle}
+                        checked={searchFormValue.fromBeginning}
+                    />
                     <Form.HelpText
                         tooltip>开启则代表从topic最早的位点开始消费，不开启则会从最近的位点开始消费</Form.HelpText>
                 </Form.Group>
-
-                {
-                    searchFormValue.partitionId != -1 && !searchFormValue.fromBeginning &&
-                    <Form.Group controlId="offset">
-                        <Form.ControlLabel>offset</Form.ControlLabel>
-                        <Form.Control name="offset" accepter={InputNumber} />
-                        <Form.HelpText
-                            tooltip>设置在该分区消费的起始offset，不设置则默认从最新的offset开始消费</Form.HelpText>
-                    </Form.Group>
-                }
-
-                <Form.Group controlId="consumeType">
-                    <Form.ControlLabel>消费类型</Form.ControlLabel>
-                    <Form.Control name="consumeType" accepter={InputPicker} data={consumeTypeSelectData} />
+                <Form.Group controlId="consumeType" className={"group-width"}>
+                    <Form.ControlLabel className={"label-width"}>消费类型</Form.ControlLabel>
+                    <Form.Control
+                        className={"input-width"}
+                        name="consumeType"
+                        accepter={InputPicker}
+                        data={consumeTypeSelectData}
+                    />
                     <Form.HelpText
                         tooltip>实时消费持续拉取消息，单次消费拉取指定数量后消费者自动停止</Form.HelpText>
                 </Form.Group>
-
-                {
-                    searchFormValue.consumeType == 2 &&
-                    <Form.Group controlId="maxCount">
-                        <Form.ControlLabel>消息数量限制</Form.ControlLabel>
-                        <Form.Control name="maxCount" accepter={InputNumber} />
-                        <Form.HelpText
-                            tooltip>单次消费达到该数量限制后，消费者将自动停止，不填写则默认 20 条上限</Form.HelpText>
-                    </Form.Group>
-                }
-
-
-                <div style={{float: "right"}}>
+                <Form.Group controlId="offset" className={"group-width"}>
+                    <Form.ControlLabel className={"label-width"}>Offset</Form.ControlLabel>
+                    <Form.Control
+                        disabled={!(searchFormValue.partitionId != -1 && !searchFormValue.fromBeginning)}
+                        className={"input-width"}
+                        name="offset"
+                        accepter={InputNumber}
+                    />
+                    <Form.HelpText
+                        tooltip>设置在该分区消费的起始offset，不设置则默认从最新的offset开始消费</Form.HelpText>
+                </Form.Group>
+                <Form.Group controlId="maxCount" className={"group-width"}>
+                    <Form.ControlLabel className={"label-width"}>消息数量限制</Form.ControlLabel>
+                    <Form.Control
+                        disabled={searchFormValue.consumeType != 2}
+                        className={"input-width"}
+                        name="maxCount"
+                        accepter={InputNumber}
+                    />
+                    <Form.HelpText
+                        tooltip>单次消费达到该数量限制后，消费者将自动停止，不填写则默认 20 条上限</Form.HelpText>
+                </Form.Group>
+                <div className={"form-buttons"}>
                     <Button appearance={"primary"} onClick={consumeSubmit} loading={consuming}>拉取</Button>
                     <Button style={{marginLeft: "8px"}} onClick={stop} loading={stopping}>停止</Button>
                     <Button style={{marginLeft: "8px"}} onClick={resetSearchForm}>重置</Button>
