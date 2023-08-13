@@ -1,11 +1,35 @@
 import React, {useEffect, useState} from 'react';
 import {Consumer, Kafka} from "kafkajs";
-import {Button, Col, Form, Grid, InputNumber, InputPicker, Message, Row, Stack, toaster, Toggle} from "rsuite";
+import {
+    Button,
+    Col,
+    Form,
+    Grid,
+    InputNumber,
+    InputPicker,
+    Message,
+    Row,
+    Schema,
+    Stack,
+    Table,
+    toaster,
+    Toggle
+} from "rsuite";
 import "./MessagePoll.scss";
+import {FormInstance} from "rsuite/esm/Form/Form";
 
+const {Column, HeaderCell, Cell} = Table;
 
 interface Props {
     kafkaClient?: Kafka
+}
+
+interface MessageInfo {
+    partitionId: number,
+    offset: string,
+    key: string | undefined,
+    value: string | undefined,
+    timestamp: string
 }
 
 const MessagePoll = (props: Props) => {
@@ -13,7 +37,7 @@ const MessagePoll = (props: Props) => {
     const [msgConsumer, setMsgConsumer] = useState<Consumer>();
 
     const defaultSearchForm = {
-        partitionId: -1,
+        topicName: '',
         fromBeginning: true,
         consumeType: 1,
     }
@@ -39,6 +63,8 @@ const MessagePoll = (props: Props) => {
 
     const [stopping, setStopping] = useState(false);
 
+    const formRef = React.createRef<FormInstance>();
+
     const consumeTypeSelectData = [
         {
             label: "实时消费",
@@ -50,10 +76,21 @@ const MessagePoll = (props: Props) => {
         },
     ]
 
+    const model = Schema.Model({
+        topicName: Schema.Types.StringType().isRequired('请选择要消费的 Topic'),
+        partitionId: Schema.Types.NumberType().isRequired('请选择要消费的分区')
+    });
+
+    const [messageList, setMessageList] = useState<Array<MessageInfo>>([]);
+
     useEffect(() => {
         console.log("MessagePoll mount");
         initConsumer();
         initTopicData();
+
+        return () => {
+            console.log("kafkaClient return");
+        }
     }, [props.kafkaClient]);
 
     useEffect(() => {
@@ -63,10 +100,17 @@ const MessagePoll = (props: Props) => {
             });
         }
         return () => {
+            console.log("msgConsumer return");
             if (msgConsumer) {
+                msgConsumer?.stop().then(() => {
+                    console.log("已停止消费");
+                    setConsuming(false);
+                    setStopping(false);
+                })
                 msgConsumer.disconnect().then(() => {
                     console.log("msgConsumer disconnect");
                 });
+
             }
         }
     }, [msgConsumer]);
@@ -120,8 +164,8 @@ const MessagePoll = (props: Props) => {
                 msgConsumer.run({
                     autoCommit: false,
                     eachMessage: async (payload) => {
+                        console.log("payload: ", payload);
                         const msg = payload.message;
-                        // console.log("===消费到消息：", msg, " 分区：", payload.partition);
                         let countFlag = false;
                         // 不是全部分区 则过滤指定分区的数据
                         if (!allPartition(partition) && payload.partition === partition) {
@@ -131,12 +175,27 @@ const MessagePoll = (props: Props) => {
                             console.log("[消费全部分区]消费到消息：", msg, " 分区：", payload.partition);
                             countFlag = true;
                         }
+                        if (countFlag) {
+                            setMessageList(oldList => [
+                                ...oldList,
+                                {
+                                    partitionId: payload.partition,
+                                    offset: msg.offset,
+                                    key: msg.key?.toString(),
+                                    value: msg.value?.toString(),
+                                    timestamp: msg.timestamp,
+                                }
+                            ]);
+                        }
                         if (countFlag && count && --count == 0) {
                             stop();
                         }
                     }
                 }).then(() => {
                     console.log("消费者已启动");
+                    toaster.push(<Message showIcon type="success">消费者已启动</Message>, {
+                        duration: 2000
+                    });
                 });
                 if (partition && partition !== -1 && startOffset) {
                     msgConsumer.seek({
@@ -166,6 +225,9 @@ const MessagePoll = (props: Props) => {
             console.log("已停止消费");
             setConsuming(false);
             setStopping(false);
+            toaster.push(<Message showIcon type="success">已停止消费</Message>, {
+                duration: 2000
+            });
         })
     }
 
@@ -180,6 +242,11 @@ const MessagePoll = (props: Props) => {
     }
 
     const consumeSubmit = () => {
+        // 表单校验
+        if (!formRef.current?.check()) {
+            return;
+        }
+        setMessageList([]);
         console.log("searchFormValue: ", searchFormValue);
         setConsuming(true);
         if (searchFormValue.consumeType === 1) {
@@ -193,23 +260,20 @@ const MessagePoll = (props: Props) => {
 
     const resetSearchForm = () => {
         setSearchFormValue(defaultSearchForm);
+        setPartitionSelectData([]);
+        setMessageList([]);
     }
 
     return (
         <div className="message-poll-container">
-            {/*<Button onClick={() => {*/}
-            {/*    startConsume("test_2_3", 0, "0",20);*/}
-            {/*}}>点我开始消费！！！</Button>*/}
-            {/*<Button onClick={pause}>暂停</Button>*/}
-            {/*<Button onClick={resume}>继续</Button>*/}
-            {/*<Button onClick={seek}>seek</Button>*/}
-            {/*<Button onClick={stop}>stop</Button>*/}
             <Form
+                ref={formRef}
                 className={"msg-search-form"}
                 layout={"inline"}
                 formValue={searchFormValue}
                 onChange={setSearchFormValue}
                 disabled={consuming}
+                model={model}
             >
                 <Form.Group controlId="topicName" className={"group-width"}>
                     <Form.ControlLabel className={"label-width"}>Topic</Form.ControlLabel>
@@ -249,6 +313,7 @@ const MessagePoll = (props: Props) => {
                         name="consumeType"
                         accepter={InputPicker}
                         data={consumeTypeSelectData}
+                        cleanable={false}
                     />
                     <Form.HelpText
                         tooltip>实时消费持续拉取消息，单次消费拉取指定数量后消费者自动停止</Form.HelpText>
@@ -273,15 +338,42 @@ const MessagePoll = (props: Props) => {
                         accepter={InputNumber}
                     />
                     <Form.HelpText
-                        tooltip>单次消费达到该数量限制后，消费者将自动停止，不填写则默认 20 条上限</Form.HelpText>
+                        tooltip>单次消费达到该数量限制后，消费者将自动停止，不填写则默认 20 条上限，实时消费无消息上限</Form.HelpText>
                 </Form.Group>
                 <div className={"form-buttons"}>
                     <Button appearance={"primary"} onClick={consumeSubmit} loading={consuming}>拉取</Button>
                     <Button style={{marginLeft: "8px"}} onClick={stop} loading={stopping}>停止</Button>
-                    <Button style={{marginLeft: "8px"}} onClick={resetSearchForm}>重置</Button>
+                    <Button style={{marginLeft: "8px"}} onClick={resetSearchForm} disabled={consuming || stopping}>重置</Button>
                 </div>
             </Form>
             <hr/>
+            <Table
+                fillHeight
+                bordered={false}
+                cellBordered={false}
+                data={messageList}
+            >
+                <Column align="center" flexGrow={1}>
+                    <HeaderCell>分区</HeaderCell>
+                    <Cell dataKey="partitionId"/>
+                </Column>
+                <Column align="center" flexGrow={1}>
+                    <HeaderCell>Offset</HeaderCell>
+                    <Cell dataKey="offset"/>
+                </Column>
+                <Column align="center" flexGrow={1}>
+                    <HeaderCell>Key</HeaderCell>
+                    <Cell dataKey="key"/>
+                </Column>
+                <Column align="center" flexGrow={1}>
+                    <HeaderCell>Value</HeaderCell>
+                    <Cell dataKey="value"/>
+                </Column>
+                <Column align="center" flexGrow={1}>
+                    <HeaderCell>Timestamp</HeaderCell>
+                    <Cell dataKey="timestamp"/>
+                </Column>
+            </Table>
         </div>
     );
 };
