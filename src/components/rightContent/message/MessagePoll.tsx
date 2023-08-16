@@ -165,6 +165,9 @@ const MessagePoll = (props: Props) => {
                     autoCommit: false,
                     eachMessage: async (payload) => {
                         console.log("payload: ", payload);
+                        if (payload.topic !== searchFormValue.topicName) {
+                            return;
+                        }
                         const msg = payload.message;
                         let countFlag = false;
                         // 不是全部分区 则过滤指定分区的数据
@@ -197,7 +200,9 @@ const MessagePoll = (props: Props) => {
                         duration: 2000
                     });
                 });
-                if (partition && partition !== -1 && startOffset) {
+                console.log("partition: ", partition);
+                if (partition !== undefined && partition !== -1 && startOffset) {
+                    console.log("seek: ", topic, partition, startOffset);
                     msgConsumer.seek({
                         topic: topic, partition: partition,
                         offset: startOffset
@@ -251,7 +256,7 @@ const MessagePoll = (props: Props) => {
         setConsuming(true);
         if (searchFormValue.consumeType === 1) {
             // 实时消费
-            startConsume(searchFormValue.topicName, searchFormValue.partitionId);
+            startConsume(searchFormValue.topicName, searchFormValue.partitionId, searchFormValue.offset);
         } else {
             // 单次消费
             startConsume(searchFormValue.topicName, searchFormValue.partitionId, searchFormValue.offset, searchFormValue.maxCount);
