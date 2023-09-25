@@ -343,15 +343,16 @@ const MessagePoll = (props: Props) => {
                         accepter={InputNumber}
                     />
                     <Form.HelpText
-                        tooltip>单次消费达到该数量限制后，消费者将自动停止，不填写则默认 20 条上限，实时消费无消息上限</Form.HelpText>
+                        tooltip>单次消费达到该数量限制后，消费者将自动停止，不填写则默认 20
+                        条上限，实时消费无消息上限</Form.HelpText>
                 </Form.Group>
                 <div className={"form-buttons"}>
                     <Button appearance={"primary"} onClick={consumeSubmit} loading={consuming}>拉取</Button>
                     <Button style={{marginLeft: "8px"}} onClick={stop} loading={stopping}>停止</Button>
-                    <Button style={{marginLeft: "8px"}} onClick={resetSearchForm} disabled={consuming || stopping}>重置</Button>
+                    <Button style={{marginLeft: "8px"}} onClick={resetSearchForm}
+                            disabled={consuming || stopping}>重置</Button>
                 </div>
             </Form>
-            <hr/>
             <Table
                 fillHeight
                 bordered={false}

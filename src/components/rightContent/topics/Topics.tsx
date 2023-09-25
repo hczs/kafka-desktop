@@ -286,7 +286,7 @@ const Topics = (props: Props) => {
             <br/>
             {/* topic main table */}
             <Table
-                fillHeight={true}
+                fillHeight
                 data={topicTableDataList}
                 loading={tableLoading}
             >

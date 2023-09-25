@@ -1,8 +1,10 @@
-.content-panel-container {
-  margin-top: 10px;
-  height: 80vh;
-}
+.right-container {
 
-.right-panel {
-  height: 78vh;
+  .content-panel-container {
+    margin-top: 20px;
+  }
+
+  .right-panel {
+    height: 63vh;
+  }
 }

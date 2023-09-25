@@ -1,12 +1,12 @@
-import React, { useEffect, useState} from 'react';
+import React, {useEffect, useState} from 'react';
 import {Loader, Message, Nav, Panel, toaster} from "rsuite";
 import ClusterInfo from "@/components/rightContent/clusterInfo/ClusterInfo";
 import Topics from "@/components/rightContent/topics/Topics";
 import PubSub from "pubsub-js";
-const { Kafka } = require('kafkajs');
+
+const {Kafka} = require('kafkajs');
 import "./RightContent.scss";
 import MessagePoll from "@/components/rightContent/message/MessagePoll";
-
 
 
 const RightContent = () => {
@@ -78,10 +78,10 @@ const RightContent = () => {
     }, [])
 
     return (
-        <div>
+        <div className='right-container'>
             {
                 loading &&
-                <Loader style={{zIndex: 999}} backdrop content="集群连接中" vertical size={"sm"} />
+                <Loader style={{zIndex: 999}} backdrop content="集群连接中" vertical size={"sm"}/>
             }
             <Nav appearance="tabs" activeKey={activeTab} justified>
                 <Nav.Item eventKey="clusterInfo" onSelect={selectItem}>集群信息</Nav.Item>
@@ -90,9 +90,7 @@ const RightContent = () => {
             </Nav>
 
             <div className='content-panel-container'>
-                <Panel bordered>
-                    {renderTab()}
-                </Panel>
+                {renderTab()}
             </div>
         </div>
     );

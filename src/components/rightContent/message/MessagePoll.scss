@@ -1,5 +1,5 @@
 .message-poll-container {
-  height: 78vh;
+  height: 53vh;
 
   .msg-search-form {
     //margin: 10px 10px 0 10px;
@@ -22,7 +22,7 @@
 
   .group-width {
     width: calc(33.33% - 8px); /* 一行三个等宽，减去间距 */
-    margin-right: 8px; /* 设置组之间的间距 */
+    margin-right: 5px; /* 设置组之间的间距 */
   }
 
   @media (min-width: 768px) {
