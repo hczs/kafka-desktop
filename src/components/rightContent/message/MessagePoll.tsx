@@ -8,6 +8,7 @@ import {
     InputNumber,
     InputPicker,
     Message,
+    Modal,
     Row,
     Schema,
     Stack,
@@ -17,6 +18,11 @@ import {
 } from "rsuite";
 import "./MessagePoll.scss";
 import {FormInstance} from "rsuite/esm/Form/Form";
+import InfoOutlineIcon from "@rsuite/icons/InfoOutline";
+import TrashIcon from "@rsuite/icons/Trash";
+import {RowDataType} from "rsuite/Table";
+import ReactJson from 'react-json-view';
+import moment from "moment";
 
 const {Column, HeaderCell, Cell} = Table;
 
@@ -82,6 +88,10 @@ const MessagePoll = (props: Props) => {
     });
 
     const [messageList, setMessageList] = useState<Array<MessageInfo>>([]);
+
+    const [messageInfo, setMessageInfo] = useState<any>();
+
+    const [msgInfoModalOpen, setMsgInfoModalOpen] = useState<boolean>(false);
 
     useEffect(() => {
         console.log("MessagePoll mount");
@@ -186,10 +196,12 @@ const MessagePoll = (props: Props) => {
                                     offset: msg.offset,
                                     key: msg.key?.toString(),
                                     value: msg.value?.toString(),
-                                    timestamp: msg.timestamp,
+                                    timestamp: moment(new Date(Number(msg.timestamp))).format("YYYY-MM-DD HH:mm:ss"),
                                 }
                             ]);
                         }
+                        console.log(new Date(msg.timestamp));
+                        moment(msg.timestamp).format("YYYY-MM-DD HH:mm:ss");
                         if (countFlag && count && --count == 0) {
                             stop();
                         }
@@ -269,8 +281,52 @@ const MessagePoll = (props: Props) => {
         setMessageList([]);
     }
 
+    const openMessageInfoModal = (rowData: RowDataType<never>) => {
+        try {
+            const msgObj = JSON.parse(rowData.value);
+            if (msgObj instanceof Object) {
+                setMessageInfo(msgObj);
+            } else {
+                setMessageInfo(rowData.value);
+            }
+        } catch (error) {
+            setMessageInfo(rowData.value);
+        }
+        setMsgInfoModalOpen(true);
+    }
+
+    const handleMsgInfoModalClose = () => {
+        setMsgInfoModalOpen(false);
+    }
+
     return (
         <div className="message-poll-container">
+            <Modal
+                   keyboard={false}
+                   open={msgInfoModalOpen}
+                   onClose={handleMsgInfoModalClose}
+                   size={"lg"}
+            >
+                <Modal.Header>
+                    <Modal.Title>消息详情</Modal.Title>
+                </Modal.Header>
+
+                <Modal.Body>
+                    <div>
+                        {
+                            messageInfo instanceof Object ?
+                                <ReactJson
+                                    src={messageInfo}
+                                    theme={"monokai"}
+                                    style={{fontFamily: "'LXGWWenKaiMono-Bold', sans-serif"}}></ReactJson>
+                                : <div className={"txt-view"}>
+                                    {messageInfo}
+                                </div>
+                        }
+                    </div>
+                </Modal.Body>
+            </Modal>
+
             <Form
                 ref={formRef}
                 className={"msg-search-form"}
@@ -375,9 +431,23 @@ const MessagePoll = (props: Props) => {
                     <HeaderCell>Value</HeaderCell>
                     <Cell dataKey="value"/>
                 </Column>
-                <Column align="center" flexGrow={1}>
+                <Column align="center" width={200}>
                     <HeaderCell>Timestamp</HeaderCell>
                     <Cell dataKey="timestamp"/>
+                </Column>
+                <Column flexGrow={1} fixed="right">
+                    <HeaderCell>操作</HeaderCell>
+                    <Cell style={{padding: '6px'}}>
+                        {rowData => (
+                            <div>
+                                <Button startIcon={<InfoOutlineIcon/>} appearance="subtle"
+                                        onClick={() => openMessageInfoModal(rowData)}>
+                                    消息详情
+                                </Button>
+                            </div>
+
+                        )}
+                    </Cell>
                 </Column>
             </Table>
         </div>

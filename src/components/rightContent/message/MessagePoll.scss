@@ -1,5 +1,5 @@
 .message-poll-container {
-  height: 53vh;
+  height: 49vh;
 
   .msg-search-form {
     //margin: 10px 10px 0 10px;
@@ -35,4 +35,12 @@
   .form-buttons {
     margin-left: auto;
   }
+}
+
+.txt-view {
+  height: 100%;
+  width: 100%;
+  border: 1px solid #00BFFF;
+  padding: 10px;
+  display: inline-block;
 }
