@@ -1,5 +1,18 @@
 @import "rsuite/dist/rsuite.min.css";
 
+// 全局字体设置
+body,
+html {
+  font-family: 'LXGWWenKaiMono-Bold', sans-serif;
+  font-size: 0.99em;
+}
+
+@font-face {
+  font-family: 'LXGWWenKaiMono-Bold';
+  font-weight: 900;
+  src: local('LXGWWenKaiMono-Bold'), url(./fonts/LXGWWenKaiMono-Bold.ttf) format('truetype');
+}
+
 .wrap-container {
   height: 100%;
   margin: 10px 0 0 10px;
