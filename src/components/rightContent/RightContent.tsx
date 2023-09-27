@@ -7,6 +7,7 @@ import PubSub from "pubsub-js";
 const {Kafka} = require('kafkajs');
 import "./RightContent.scss";
 import MessagePoll from "@/components/rightContent/message/MessagePoll";
+import MessageSend from './send/MessageSend';
 
 
 const RightContent = () => {
@@ -32,6 +33,8 @@ const RightContent = () => {
                 return <Topics kafkaClient={kafkaClient}></Topics>;
             case "message":
                 return <MessagePoll kafkaClient={kafkaClient}></MessagePoll>
+            case "send":
+                return <MessageSend kafkaClient={kafkaClient}></MessageSend>
         }
     }
 
@@ -86,7 +89,8 @@ const RightContent = () => {
             <Nav appearance="tabs" activeKey={activeTab} justified>
                 <Nav.Item eventKey="clusterInfo" onSelect={selectItem}>集群信息</Nav.Item>
                 <Nav.Item eventKey="topics" onSelect={selectItem}>Topic 管理</Nav.Item>
-                <Nav.Item eventKey="message" onSelect={selectItem}>消息查询</Nav.Item>
+                <Nav.Item eventKey="message" onSelect={selectItem}>查询消息</Nav.Item>
+                <Nav.Item eventKey="send" onSelect={selectItem}>发送消息</Nav.Item>
             </Nav>
 
             <div className='content-panel-container'>
