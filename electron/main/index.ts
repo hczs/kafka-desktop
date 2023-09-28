@@ -47,8 +47,10 @@ let store = new Store();
 
 async function createWindow() {
     win = new BrowserWindow({
-        title: 'Main window',
+        title: 'KafkaDesktop',
         icon: join(process.env.VITE_PUBLIC, 'favicon.ico'),
+        height: 800,
+        width: 1100,
         webPreferences: {
             preload,
             // Warning: Enable nodeIntegration and disable contextIsolation is not secure in production
@@ -58,6 +60,9 @@ async function createWindow() {
             contextIsolation: false,
         },
     })
+
+    // 隐藏顶部按钮
+    win.setMenu(null);
 
     if (url) { // electron-vite-vue#298
         win.loadURL(url)

@@ -2,7 +2,7 @@
 
 declare namespace NodeJS {
   interface ProcessEnv {
-    VSCODE_DEBUG?: 'true'
+    VSCODE_DEBUG?: 'false'
     DIST_ELECTRON: string
     DIST: string
     /** /dist/ or /public/ */
