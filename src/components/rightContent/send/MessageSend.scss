@@ -1,6 +1,17 @@
 .msg-send-container {
   .send-form {
+    margin: 0 10% 0 10%;
+  }
+
+  .input-width {
     width: 100%;
-    margin: 0 0 0 20px;
+  }
+
+  .send-btn {
+    float: right;
+  }
+
+  .msg-content {
+    height: 160px;
   }
 }
