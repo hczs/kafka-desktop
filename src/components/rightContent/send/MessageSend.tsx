@@ -1,15 +1,16 @@
 import React, {ForwardedRef, useEffect, useState} from 'react';
 import {Kafka, Producer} from "kafkajs";
-import {Button, ButtonToolbar, Form, Input, InputPicker, Message, Schema, toaster} from "rsuite";
+import {Button, Form, Input, InputPicker, InputProps, Message, Schema, toaster} from "rsuite";
 import "./MessageSend.scss";
-import {send} from "vite";
 import {FormInstance} from "rsuite/esm/Form/Form";
 
 interface Props {
     kafkaClient?: Kafka
 }
 
-const Textarea = React.forwardRef((props, ref) => {
+type TextAreaProps = InputProps & React.TextareaHTMLAttributes<HTMLTextAreaElement>;
+
+const Textarea = React.forwardRef((props: TextAreaProps, ref) => {
     return <Input {...props} as="textarea" ref={ref as ForwardedRef<HTMLTextAreaElement>}/>
 });
 
@@ -148,9 +149,10 @@ const MessageSend = (props: Props) => {
                 <Form.Group controlId="messageContent">
                     <Form.ControlLabel>消息内容</Form.ControlLabel>
                     <Form.Control
-                        className={"msg-content"}
                         name="messageContent"
-                        accepter={Textarea} />
+                        accepter={Textarea}
+                        rows={8}
+                    />
                 </Form.Group>
                 <Form.Group>
                     <Button
