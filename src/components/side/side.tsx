@@ -58,7 +58,7 @@ const Side = () => {
 
     const [clusterList, setClusterList] = useState<Array<ClusterInfo>>([]);
 
-    // 删除已选择的行
+    // 当前已选的更新或删除的行
     const [selectedRowData, setSelectedRowData] = useState<RowDataType>([]);
 
     // 连接按钮选中的行
@@ -91,8 +91,9 @@ const Side = () => {
         setOpen(false);
     };
 
-    // 开启模态框
+    // 开启新增模态框
     const handleOpen = () => {
+        setUpdateFlag(false);
         setOpen(true);
     };
 
@@ -108,8 +109,7 @@ const Side = () => {
     }
 
     const updateKafkaClusterInfo = () => {
-        clusterList.splice(clusterList.indexOf(selectedRowData as ClusterInfo), 1);
-        clusterList.push(formValue);
+        clusterList[clusterList.indexOf(selectedRowData as ClusterInfo)] = formValue;
         handleClose();
         ipcRenderer.send("saveData", "clusterInfo", clusterList);
     }
@@ -132,13 +132,12 @@ const Side = () => {
     const openUpdateModal = (rowData: RowDataType<never>) => {
         setUpdateFlag(true);
         console.log("update rowData: ", rowData);
+        setSelectedRowData(rowData);
         setFormValue(rowData);
-        handleOpen();
+        setOpen(true);
     }
 
     const deleteCluster = () => {
-        console.log("del rowData: ", selectedRowData);
-        console.log("clusterList.indexOf(rowData as ClusterInfo): ", clusterList.indexOf(selectedRowData as ClusterInfo));
         clusterList.splice(clusterList.indexOf(selectedRowData as ClusterInfo), 1);
         ipcRenderer.send("saveData", "clusterInfo", clusterList);
         setDelModalOpen(false);
@@ -177,7 +176,6 @@ const Side = () => {
                     showHeader={false}
                     rowClassName={(rowData, _) => {
                         if (rowData.id === connRowData.id) {
-                            console.log('id: ', connRowData.id + 'className: ', context.theme + '-conn-row')
                             return context.theme + '-conn-row';
                         }
                         return '';
