@@ -31,8 +31,13 @@ fs.readFile('./package.json', 'utf-8', (err, data) => {
     let macSourceFile = commonPath + fileName + ".dmg";
 
     // 复制文件
-    fs.copyFileSync(winSourceFile, targetPath + fileName + ".exe");
-    fs.copyFileSync(macSourceFile, targetPath + fileName + ".dmg");
+    if (fs.existsSync(winSourceFile)) {
+        fs.copyFileSync(winSourceFile, targetPath + fileName + ".exe");
+    }
+
+    if (fs.existsSync(macSourceFile)) {
+        fs.copyFileSync(macSourceFile, targetPath + fileName + ".dmg");
+    }
 });
 
 
