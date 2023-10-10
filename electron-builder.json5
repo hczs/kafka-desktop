@@ -13,6 +13,7 @@
   ],
   "mac": {
     "artifactName": "${productName}_${version}.${ext}",
+    "icon": "./src/assets/ico-512x512.ico",
     "target": [
       "dmg",
       "zip"
@@ -27,12 +28,14 @@
         ]
       }
     ],
+    "icon": "./src/assets/ico-512x512.ico",
     "artifactName": "${productName}_${version}.${ext}"
   },
   "nsis": {
     "oneClick": false,
     "perMachine": false,
     "allowToChangeInstallationDirectory": true,
+    "installerIcon": "./src/assets/ico-512x512.ico",
     "deleteAppDataOnUninstall": false
   },
   "publish": {

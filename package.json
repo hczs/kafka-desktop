@@ -1,5 +1,5 @@
 {
-  "name": "kafka-desktop",
+  "name": "KafkaDesktop",
   "version": "0.0.1",
   "main": "dist-electron/main/index.js",
   "description": "kafka desktop",
