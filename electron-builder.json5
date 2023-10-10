@@ -13,7 +13,7 @@
   ],
   "mac": {
     "artifactName": "${productName}_${version}.${ext}",
-    "icon": "./src/assets/mac-512x512.ico",
+    "icon": "build/mac-512x512.ico",
     "target": [
       "dmg",
       "zip"
@@ -28,14 +28,14 @@
         ]
       }
     ],
-    "icon": "./src/assets/win-128x128.ico",
+    "icon": "build/win-128x128.ico",
     "artifactName": "${productName}_${version}.${ext}"
   },
   "nsis": {
     "oneClick": false,
     "perMachine": false,
     "allowToChangeInstallationDirectory": true,
-    "installerIcon": "./src/assets/win-128x128.ico",
+    "installerIcon": "build/win-128x128.ico",
     "deleteAppDataOnUninstall": false
   },
   "publish": {
