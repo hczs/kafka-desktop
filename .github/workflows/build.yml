@@ -11,7 +11,7 @@ jobs:
     # mac and windows
     strategy:
       matrix:
-        os: [windows-latest]
+        os: [windows-latest, macOS-latest]
 
     steps:
       - name: Check out git repository
@@ -32,3 +32,4 @@ jobs:
         with:
           name: kafka-desktop
           path: ./release
+          if-no-files-found: error
