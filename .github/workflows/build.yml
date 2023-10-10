@@ -1,0 +1,22 @@
+name: Build App
+on:
+  push:
+    branches:
+      - master 
+jobs:
+  pack: 
+    runs-on: ${{matrix.os}}
+    strategy:
+      matrix:
+        os: [windows-latest, macOS-latest]
+    steps:
+    - uses: actions/checkout@v2 
+    - name: Install and build
+      run: |
+        npm install
+        npm run build
+    - name: Upload file
+      uses: actions/upload-artifact@v2
+      with:
+        name: kafka-desktop
+        path: release
