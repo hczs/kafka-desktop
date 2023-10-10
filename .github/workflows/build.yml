@@ -11,7 +11,7 @@ jobs:
     # mac and windows
     strategy:
       matrix:
-        os: [windows-latest, macOS-12]
+        os: [windows-latest]
 
     steps:
       - name: Check out git repository
@@ -29,7 +29,6 @@ jobs:
 
       - name: Upload file
         uses: actions/upload-artifact@v2
-
         with:
           name: kafka-desktop
           path: release
