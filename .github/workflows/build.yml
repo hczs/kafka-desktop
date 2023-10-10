@@ -4,19 +4,32 @@ on:
     branches:
       - main
 jobs:
-  pack: 
+  build:
+    name: build electron app
     runs-on: ${{matrix.os}}
+
+    # mac and windows
     strategy:
       matrix:
-        os: [windows-latest, macOS-latest]
+        os: [windows-latest, macOS-12]
+
     steps:
-    - uses: actions/checkout@v2 
-    - name: Install and build
-      run: |
-        npm install
-        npm run build
-    - name: Upload file
-      uses: actions/upload-artifact@v2
-      with:
-        name: kafka-desktop
-        path: release
+      - name: Check out git repository
+        uses: actions/checkout@v3.0.0
+
+      - name: Install Node.js
+        uses: actions/setup-node@v3.0.0
+        with:
+          node-version: '16'
+
+      - name: Install and build
+        run: |
+          npm install
+          npm run build
+
+      - name: Upload file
+        uses: actions/upload-artifact@v2
+
+        with:
+          name: kafka-desktop
+          path: release
