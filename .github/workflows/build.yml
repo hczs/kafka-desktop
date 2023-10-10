@@ -28,7 +28,7 @@ jobs:
           npm run build
 
       - name: Upload file
-        uses: actions/upload-artifact@v2
+        uses: actions/checkout@v3
         with:
           name: kafka-desktop
           path: release
