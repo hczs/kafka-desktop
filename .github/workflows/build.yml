@@ -2,7 +2,7 @@ name: Build App
 on:
   push:
     branches:
-      - master 
+      - main
 jobs:
   pack: 
     runs-on: ${{matrix.os}}
