@@ -27,9 +27,12 @@ jobs:
           npm install --legacy-peer-deps
           npm run build
 
+      - name: Copy pag to target dir
+        run: node handle_pkg.js
+
       - name: Upload file
         uses: actions/upload-artifact@v3
         with:
           name: kafka-desktop
-          path: ./release
+          path: ./release/installation-packages
           if-no-files-found: error
