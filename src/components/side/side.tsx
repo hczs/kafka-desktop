@@ -70,8 +70,15 @@ const Side = () => {
         console.log("side mount");
         const storeValue = ipcRenderer.sendSync("getData", "clusterInfo");
         setClusterList(storeValue == undefined ? [] : storeValue);
+        // 订阅连接响应信息
+        PubSub.subscribe("connectResultTopic", connectResultConsumer);
     }, [])
 
+    const connectResultConsumer = (msg: any, data: any) => {
+        if (data.success) {
+            setConnRowData(data.data);
+        }
+    }
 
     const changeTheme = () => {
         const targetTheme = context.theme == "light" ? "dark" : "light";
@@ -80,7 +87,7 @@ const Side = () => {
 
     const connect = (rowData: RowDataType<never>) => {
         console.log('connect rowData:', rowData);
-        setConnRowData(rowData);
+        // setConnRowData(rowData);
         // publish a topic asynchronously
         PubSub.publish('clusterInfoTopic', rowData);
     }
