@@ -1,5 +1,5 @@
 import React, {useEffect, useState} from "react";
-import {Button, Container, Content, CustomProvider, Footer, Header, Sidebar} from "rsuite";
+import {Container, Content, CustomProvider, Sidebar} from "rsuite";
 import "./index.scss"
 import Side from "@/components/side/side";
 import PageContext from "@/PageContext";
@@ -10,35 +10,56 @@ interface State {
     theme: 'light' | 'dark' | 'high-contrast',
 }
 
-const getTheme = () => {
-    const storeTheme = ipcRenderer.sendSync("getData", "theme");
-    if (storeTheme) {
-        return storeTheme;
-    }
-    return "light";
-}
-
 const App = () => {
 
-    const [state, setState] = useState<State>({theme: getTheme()});
+    const [state, setState] = useState<State>();
 
-    const [sideWidth, setSideWidth] = useState(260);
+    const [sideWidth, setSideWidth] = useState(280);
+
+    let sideWidthBack = 280;
 
     const changeTheme = (theme: 'light' | 'dark' | 'high-contrast') => {
         ipcRenderer.send("saveData", "theme", theme);
         setState({theme: theme});
     }
 
+    const getTheme = () => {
+        if (state) {
+            return state.theme;
+        }
+        const storeTheme = ipcRenderer.sendSync("getData", "theme");
+        if (storeTheme) {
+            setState({theme: storeTheme});
+            return storeTheme;
+        }
+        return "light";
+    }
+
     const contextVal = {
-        theme: state.theme,
+        theme: getTheme(),
         changeTheme: changeTheme,
+    }
+
+    const mousemove = (e: MouseEvent) => {
+        const mouseX = e.x;
+        const dragSideWidth = mouseX - 17;
+
+        if ((dragSideWidth > 280) && (dragSideWidth < 1200)) {
+            setSideWidth(dragSideWidth);
+            sideWidthBack = dragSideWidth;
+        }
+    }
+
+    const mouseup = () => {
+        document.documentElement.removeEventListener('mousemove', mousemove);
+        document.documentElement.removeEventListener('mouseup', mouseup);
+        ipcRenderer.send("saveData", "sideWidth", sideWidthBack);
     }
 
     const bindSideBarDrag = () => {
         const dragPointer = document.getElementById('drag-resize-pointer');
 
         if (dragPointer) {
-            console.log("add event listener")
             dragPointer.addEventListener('mousedown', (e) => {
                 e.preventDefault();
 
@@ -46,29 +67,13 @@ const App = () => {
                 document.documentElement.addEventListener('mouseup', mouseup);
             });
         }
-
-        const mousemove = (e: MouseEvent) => {
-            console.log("move", e)
-            const mouseX = e.x;
-            const dragSideWidth = mouseX - 17;
-
-            if ((dragSideWidth > 280) && (dragSideWidth < 1500)) {
-                setSideWidth(dragSideWidth);
-                ipcRenderer.send("saveData", "sideWidth", dragSideWidth);
-            }
-        }
-
-        const mouseup = () => {
-            console.log("up");
-            document.documentElement.removeEventListener('mousemove', mousemove);
-            document.documentElement.removeEventListener('mouseup', mouseup);
-            // 存储当前宽度 涉及到 useState 异步更新不及时问题，待解决
-        }
     }
 
     const initSideWidth = () => {
         const storeValue = ipcRenderer.sendSync("getData", "sideWidth");
-        setSideWidth(storeValue);
+        if (storeValue) {
+            setSideWidth(storeValue);
+        }
     }
 
     useEffect(() => {
