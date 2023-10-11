@@ -58,10 +58,20 @@ const RightContent = () => {
             });
             // 初始化 kafka 连接对象 开始连接
             setKafkaClient(tmpClient);
+            let resultObj = {
+                success: true,
+                data: data
+            }
+            PubSub.publish("connectResultTopic", resultObj);
         }).catch(() => {
             toaster.push(<Message showIcon type="error">集群连接异常，请检查配置信息是否正确</Message>, {
                 duration: 2000
             });
+            let resultObj = {
+                success: false,
+                data: data
+            }
+            PubSub.publish("connectResultTopic", resultObj);
         }).finally(() => {
             if (testAdmin) {
                 testAdmin.disconnect();

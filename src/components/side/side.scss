@@ -11,12 +11,18 @@
   width: 100%;
 }
 
+.icon-btn {
+  float: right;
+  margin: 0 0 0 10px;
+}
+
 .conn-btn {
   width: 100%;
 }
 
 .row-container {
-  margin: 0 0 0 -10px
+  margin: 0 0 0 -10px;
+  display: flex;
 }
 
 .light-conn-row {

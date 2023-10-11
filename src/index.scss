@@ -5,6 +5,8 @@ body,
 html {
   font-family: 'LXGWWenKaiMono-Bold', sans-serif;
   font-size: 0.99em;
+  // 拖拽大小修改可能会出现滚动条，超出部分hidden处理
+  overflow: hidden;
 }
 
 @font-face {

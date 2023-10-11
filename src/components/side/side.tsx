@@ -70,8 +70,15 @@ const Side = () => {
         console.log("side mount");
         const storeValue = ipcRenderer.sendSync("getData", "clusterInfo");
         setClusterList(storeValue == undefined ? [] : storeValue);
+        // 订阅连接响应信息
+        PubSub.subscribe("connectResultTopic", connectResultConsumer);
     }, [])
 
+    const connectResultConsumer = (msg: any, data: any) => {
+        if (data.success) {
+            setConnRowData(data.data);
+        }
+    }
 
     const changeTheme = () => {
         const targetTheme = context.theme == "light" ? "dark" : "light";
@@ -80,7 +87,7 @@ const Side = () => {
 
     const connect = (rowData: RowDataType<never>) => {
         console.log('connect rowData:', rowData);
-        setConnRowData(rowData);
+        // setConnRowData(rowData);
         // publish a topic asynchronously
         PubSub.publish('clusterInfoTopic', rowData);
     }
@@ -147,25 +154,22 @@ const Side = () => {
         <div className='side-container'>
 
             <div className='connect-container'>
-                <Grid fluid>
-                    <Row className='row-container'>
-                        <Col xs={20}>
-                            <Button className='conn-btn' appearance="primary" block
-                                    onClick={handleOpen}>新建连接</Button>
-                        </Col>
-                        <Col xs={4}>
-                            <IconButton
-                                icon={
-                                    <Icon
-                                        as={context.theme === 'light' ? MdOutlineNightlight : MdOutlineLightMode}
-                                    />
-                                }
-                                onClick={changeTheme}
-                            />
-                        </Col>
-                    </Row>
-                </Grid>
-
+                <div className='row-container'>
+                    <div className='conn-btn'>
+                        <Button appearance="primary" block
+                                onClick={handleOpen}>新建连接</Button>
+                    </div>
+                    <div className={"icon-btn"}>
+                        <IconButton
+                            icon={
+                                <Icon
+                                    as={context.theme === 'light' ? MdOutlineNightlight : MdOutlineLightMode}
+                                />
+                            }
+                            onClick={changeTheme}
+                        />
+                    </div>
+                </div>
             </div>
             <div className='cluster-list'>
                 <Table
@@ -182,7 +186,7 @@ const Side = () => {
                     }}
                 >
 
-                    <Column align="center" flexGrow={1}>
+                    <Column align="left" flexGrow={1}>
                         <HeaderCell>clusterName</HeaderCell>
                         <Cell dataKey="clusterName"/>
                     </Column>

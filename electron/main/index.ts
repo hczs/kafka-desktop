@@ -1,4 +1,4 @@
-import {app, BrowserWindow, shell, ipcMain} from 'electron'
+import {app, BrowserWindow, shell, ipcMain, ipcRenderer, contextBridge} from 'electron'
 import Store from "electron-store";
 import {release} from 'node:os'
 import {join} from 'node:path'
@@ -45,12 +45,29 @@ const indexHtml = join(process.env.DIST, 'index.html')
 // electron-store 存储
 let store = new Store();
 
+
+let defaultSizeData = {
+    height: 800,
+    width: 1100,
+}
+
+interface WindowSize {
+    height: number,
+    width: number
+}
+
+let windowSizeData = store.get("windowSizeData") as WindowSize;
+if (windowSizeData) {
+    defaultSizeData.height = windowSizeData.height;
+    defaultSizeData.width = windowSizeData.width;
+}
+
 async function createWindow() {
     win = new BrowserWindow({
         title: 'KafkaDesktop',
         icon: join(process.env.VITE_PUBLIC, 'favicon.ico'),
-        height: 800,
-        width: 1100,
+        height: defaultSizeData.height,
+        width: defaultSizeData.width,
         webPreferences: {
             preload,
             // Warning: Enable nodeIntegration and disable contextIsolation is not secure in production
@@ -84,6 +101,14 @@ async function createWindow() {
         return {action: 'deny'}
     })
 
+    win.on("resize", (e: any) => {
+        let sizeData = win?.getContentBounds();
+        if (sizeData) {
+            defaultSizeData.width = sizeData.width;
+            defaultSizeData.height = sizeData.height;
+        }
+    })
+
     // Apply electron-updater
     update(win)
 }
@@ -91,6 +116,8 @@ async function createWindow() {
 app.whenReady().then(createWindow)
 
 app.on('window-all-closed', () => {
+    // 程序关闭存储程序窗口大小
+    store.set("windowSizeData", defaultSizeData);
     win = null
     if (process.platform !== 'darwin') app.quit()
 })
