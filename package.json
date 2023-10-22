@@ -1,6 +1,6 @@
 {
   "name": "KafkaDesktop",
-  "version": "0.0.1",
+  "version": "0.2.0",
   "main": "dist-electron/main/index.js",
   "description": "kafka desktop",
   "author": "houcheng",
