@@ -3,16 +3,16 @@
 // 全局字体设置
 body,
 html {
-  font-family: 'LXGWWenKaiMono-Bold', sans-serif;
+  font-family: 'HarmonyOS_Sans_SC_Regular', sans-serif;
   font-size: 0.99em;
   // 拖拽大小修改可能会出现滚动条，超出部分hidden处理
   overflow: hidden;
 }
 
 @font-face {
-  font-family: 'LXGWWenKaiMono-Bold';
+  font-family: 'HarmonyOS_Sans_SC_Regular';
   font-weight: 900;
-  src: local('LXGWWenKaiMono-Bold'), url(./fonts/LXGWWenKaiMono-Bold.ttf) format('truetype');
+  src: local('HarmonyOS_Sans_SC_Regular'), url(./fonts/HarmonyOS_Sans_SC_Regular.ttf) format('truetype');
 }
 
 .wrap-container {
