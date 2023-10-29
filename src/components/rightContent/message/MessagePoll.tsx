@@ -376,7 +376,7 @@ const MessagePoll = (props: Props) => {
                                 <ReactJson
                                     src={messageInfo}
                                     theme={"monokai"}
-                                    style={{fontFamily: "'LXGWWenKaiMono-Bold', sans-serif"}}></ReactJson>
+                                    style={{fontFamily: "'HarmonyOS_Sans_SC_Regular', sans-serif"}}></ReactJson>
                                 : <div className={"txt-view"}>
                                     {messageInfo}
                                 </div>
