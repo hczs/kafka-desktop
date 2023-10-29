@@ -24,25 +24,25 @@
 
 ## 工具截图
 ### 亮色主题
-![亮色主题](./attchments/Pasted image 20231029120246.png)
+![亮色主题](./attchments/20231029120246.png)
 ### 暗色主题
-![暗色主题](./attchments/Pasted image 20231029120303.png)
+![暗色主题](./attchments/20231029120303.png)
 ### 添加连接
-![添加连接](./attchments/Pasted image 20231029120018.png)
+![添加连接](./attchments/20231029120018.png)
 ### 集群连接管理
-![集群连接管理](./attchments/Pasted image 20231029120342.png)
+![集群连接管理](./attchments/20231029120342.png)
 ### 集群信息查看
-![集群信息查看](./attchments/Pasted image 20231029120423.png)
+![集群信息查看](./attchments/20231029120423.png)
 ### Topic 管理
-![Topic 管理](./attchments/Pasted image 20231029120443.png)
+![Topic 管理](./attchments/20231029120443.png)
 ### Topic 分区信息查看
-![Topic 分区信息查看](./attchments/Pasted image 20231029120527.png)
+![Topic 分区信息查看](./attchments/20231029120527.png)
 ### 消息拉取
-![消息拉取](./attchments/Pasted image 20231029120559.png)
+![消息拉取](./attchments/20231029120559.png)
 ### 消息查看
-![消息查看](./attchments/Pasted image 20231029120705.png)
+![消息查看](./attchments/20231029120705.png)
 ### 消息发送
-![消息发送](./attchments/Pasted image 20231029120735.png)
+![消息发送](./attchments/20231029120735.png)
 
 ## 开发步骤
 项目开发环境 node 版本：v18.12.1
